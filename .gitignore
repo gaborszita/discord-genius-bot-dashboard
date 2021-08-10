@@ -1,0 +1,9 @@
+# holds temporary audio recordings
+audiotemp/
+
+# holds server-specific config
+.htaccess
+
+# secrets and API keys
+php-files/common-defines.php
+php-files/oauth2/discord/common-defines.php
