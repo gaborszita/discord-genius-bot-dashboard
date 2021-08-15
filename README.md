@@ -9,6 +9,9 @@ Dashboard setup:
    Copy the .htaccess.example file and name it .htaccess. Also, make sure 
    that you're web server has mod_rewrite enabled.
    
+   Also, copy the .htaccess.example file in the php-files directory and name 
+   it .htaccess.
+   
    Alternatively, you may choose to put the config in the htaccess file in 
    the web server config.
    
