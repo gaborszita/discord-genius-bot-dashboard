@@ -140,6 +140,8 @@ else if(substr($request_uri, 0, 10)=='/dashboard')
                             $responseBuilder->body .= '<p>Utilities:</p>';
                             $responseBuilder->body .= '<p><a href="/dashboard/' . 
                                 $guild. '/counter' . '">Counter</a></p>';
+                            $responseBuilder->body .= '<p><a href="/dashboard/' . 
+                                $guild. '/greeting' . '">Greeting</a></p>';
                         }
                         else
                         {
@@ -293,6 +295,85 @@ else if(substr($request_uri, 0, 10)=='/dashboard')
                                 $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
                                 $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
                                      '; url=/dashboard/' . $guild . '/counter" />';
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                        }
+                        $conn->close();
+                    }
+                    else if(count($urlSeperated)>=4 && $urlSeperated[3]=='greeting')
+                    {
+                        $conn = new mysqli(MARIADB_SERVER_NAME, MARIADB_USERNAME, MARIADB_PASSWORD, 
+                                           MARIADB_DATABASE_NAME);
+                        if($conn->connect_error)
+                        {
+                            http_response_code(500);
+                            $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            $found = true;
+                        }
+                        else if(count($urlSeperated)==4)
+                        {
+                            $result = $conn->query('SELECT 1 FROM greeting_guild_data'
+                                                   . ' WHERE guildId="' . $guild . '"');
+                            if($result)
+                            {
+                                $resultArray = mysqli_fetch_array($result);
+                                $responseBuilder->body .= '<p>This feature greets users when they enter messages like ' . 
+                                    '"hello" and "what\'s up".</p>';
+                                if($result->num_rows>0)
+                                {
+                                    $responseBuilder->body .= '<p>This feature is enabled. Genius Bot is greeting people!</p>';
+                                    $responseBuilder->body .= '<form action="/dashboard/' . $guild . '/greeting/disable">';
+                                    $responseBuilder->body .= '<input type="submit" value="Disable">';
+                                    $responseBuilder->body .= '</form>';
+                                }
+                                else
+                                {
+                                    $responseBuilder->body .= '<p>This feature is not enabled</p>';
+                                    $responseBuilder->body .= '<form action="/dashboard/' . $guild . '/greeting/enable">';
+                                    $responseBuilder->body .= '<input type="submit" value="Enable" />';
+                                    $responseBuilder->body .= '</form>';
+                                }
+                                
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                            
+                        }
+                        else if(count($urlSeperated)==5 && $urlSeperated[4]=='disable')
+                        {
+                            $result = $conn->query('DELETE FROM greeting_guild_data WHERE guildId="' . $guild . '"');
+                            if($result == true)
+                            {
+                                $responseBuilder->body .= '<p>This feature has been successfully disabled.</p>';
+                                $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
+                                $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
+                                     '; url=/dashboard/' . $guild . '/greeting" />';
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                        }
+                        else if(count($urlSeperated)==5 && $urlSeperated[4]=='enable')
+                        {
+                            $result = $conn->query('INSERT INTO greeting_guild_data(guildId) VALUES("' . $guild . '")');
+                            if($result == true)
+                            {
+                                $responseBuilder->body .= '<p>This feature has been successfully enabled.</p>';
+                                $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
+                                $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
+                                     '; url=/dashboard/' . $guild . '/greeting" />';
                             }
                             else
                             {
