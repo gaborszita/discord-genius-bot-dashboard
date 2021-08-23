@@ -142,6 +142,8 @@ else if(substr($request_uri, 0, 10)=='/dashboard')
                                 $guild. '/counter' . '">Counter</a></p>';
                             $responseBuilder->body .= '<p><a href="/dashboard/' . 
                                 $guild. '/greeting' . '">Greeting</a></p>';
+                            $responseBuilder->body .= '<p><a href="/dashboard/' . 
+                                $guild. '/offensive-words-patrol' . '">Offensive Words Patrol</a></p>';
                         }
                         else
                         {
@@ -374,6 +376,122 @@ else if(substr($request_uri, 0, 10)=='/dashboard')
                                 $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
                                 $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
                                      '; url=/dashboard/' . $guild . '/greeting" />';
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                        }
+                        $conn->close();
+                    }
+                    else if(count($urlSeperated)>=4 && $urlSeperated[3]=='offensive-words-patrol')
+                    {
+                        $conn = new mysqli(MARIADB_SERVER_NAME, MARIADB_USERNAME, MARIADB_PASSWORD, 
+                                           MARIADB_DATABASE_NAME);
+                        if($conn->connect_error)
+                        {
+                            http_response_code(500);
+                            $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            $found = true;
+                        }
+                        else if(count($urlSeperated)==4)
+                        {
+                            $result = $conn->query('SELECT watchNSFW FROM offensive_words_patrol_guild_data'
+                                                   . ' WHERE guildId="' . $guild . '"');
+                            if($result)
+			    {
+                                $responseBuilder->body .= '<p>This feature disallows users to use offensive words in your server.</p>';
+                                $resultArray = mysqli_fetch_array($result);
+                                if($result->num_rows>0)
+                                {
+                                    $responseBuilder->body .= '<form action="/dashboard/' . $guild . '/offensive-words-patrol/update" method="post">';
+                                    if ($resultArray['watchNSFW'] == true)
+                                    {
+                                        $responseBuilder->body .= '<input type="checkbox" id="watchNSFW" name="watchNSFW" value="true" checked>';
+                                    }
+                                    else
+                                    {
+                                        $responseBuilder->body .= '<input type="checkbox" id="watchNSFW" name="watchNSFW" value="true">';
+                                    }
+                                    $responseBuilder->body .= '<label for="watchNSFW">Enable offensive words patrol in NSFW channels</label>';
+                                    $responseBuilder->body .= '<br><br><input type="submit" value="Update settings">';
+                                    $responseBuilder->body .= '</form>';
+                                    $responseBuilder->body .= '<br>';
+                                    $responseBuilder->body .= '<form action="/dashboard/' . $guild . '/offensive-words-patrol/disable">';
+                                    $responseBuilder->body .= '<input type="submit" value="Disable">';
+                                    $responseBuilder->body .= '</form>';
+                                }
+                                else
+                                {
+                                    $responseBuilder->body .= '<p>This feature is not enabled</p>';
+                                    $responseBuilder->body .= '<form action="/dashboard/' . $guild . '/offensive-words-patrol/enable">';
+                                    $responseBuilder->body .= '<input type="submit" value="Enable" />';
+                                    $responseBuilder->body .= '</form>';
+                                }
+                                
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                            
+                        }
+                        else if(count($urlSeperated)==5 && $urlSeperated[4]=='update')
+                        {
+                            if (isset($_POST['watchNSFW']))
+                            {
+                                $watchNSFW = 'true';
+                            }
+                            else
+                            {
+                                $watchNSFW = 'false';
+                            }
+                            $result = $conn->query('UPDATE offensive_words_patrol_guild_data SET watchNSFW=' . $watchNSFW . 
+                                                    ' WHERE guildId="' . $guild . '"');
+                            if($result == true)
+                            {
+                                $responseBuilder->body .= '<p>Settings have been successfully updated.</p>';
+                                $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
+                                $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
+                                        '; url=/dashboard/' . $guild . '/offensive-words-patrol" />';
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                        }
+                        else if(count($urlSeperated)==5 && $urlSeperated[4]=='disable')
+                        {
+                            $result = $conn->query('DELETE FROM offensive_words_patrol_guild_data WHERE guildId="' . $guild . '"');
+                            if($result == true)
+                            {
+                                $responseBuilder->body .= '<p>This feature has been successfully disabled.</p>';
+                                $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
+                                $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
+                                     '; url=/dashboard/' . $guild . '/offensive-words-patrol" />';
+                            }
+                            else
+                            {
+                                http_response_code(500);
+                                $responseBuilder->body .= '<p>An unexpected error has occured</p>';
+                            }
+                            $found = true;
+                        }
+                        else if(count($urlSeperated)==5 && $urlSeperated[4]=='enable')
+                        {
+                            $result = $conn->query('INSERT INTO offensive_words_patrol_guild_data(guildId) VALUES("' . $guild . '")');
+                            if($result == true)
+                            {
+                                $responseBuilder->body .= '<p>This feature has been successfully enabled.</p>';
+                                $responseBuilder->body .= '<p>You will be redirected in a few seconds</p>';
+                                $responseBuilder->head .= '<meta http-equiv="refresh" content="' . REDIRECT_TIMEOUT . 
+                                     '; url=/dashboard/' . $guild . '/offensive-words-patrol" />';
                             }
                             else
                             {
