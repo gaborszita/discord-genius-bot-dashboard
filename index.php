@@ -167,7 +167,8 @@ else if(substr($request_uri, 0, 10)=='/dashboard')
                             $result = $conn->query('SELECT nextCount, counterChannelId FROM counter_guild_data'
                                                    . ' WHERE guildId="' . $guild . '"');
                             if($result)
-                            {
+			    {
+                                $responseBuilder->body .= '<p>This feature enables you and people in your server to count in a text channel.</p>';
                                 $resultArray = mysqli_fetch_array($result);
                                 if($result->num_rows>0)
                                 {
